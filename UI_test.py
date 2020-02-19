@@ -20,6 +20,7 @@ class Logic:
         self.method = tk.StringVar()        
         self.methodList = ["SideWinder", "Eller's Algorithm"]
         self.method.set(self.methodList[0])
+        self.pointString = tk.StringVar()
 
     def reset(self):
         self.maze = None
@@ -40,6 +41,7 @@ class Application(tk.Frame):
         self.rightFrame = tk.Frame(self)
         
         self.sizeFrame = tk.Frame(self.leftFrame, bd = 2, relief = tk.GROOVE)
+        self.pointFrame = tk.Frame(self.leftFrame, bd = 2, relief = tk.GROOVE)
 
         self.leftFrame.pack(side = "left")
         self.rightFrame.pack(side = "right")
@@ -67,6 +69,17 @@ class Application(tk.Frame):
 
         self.generateBtn = tk.Button(self.leftFrame, text = "Generate Maze", command = self.generateMaze)
         self.generateBtn.pack(side="top", pady = 10)
+
+        self.pointFrame.pack(side = "top", padx = 10, pady = 10)
+
+        self.pointsLbl = tk.Label(self.pointFrame, bd = 2, relief = tk.GROOVE, textvariable = self.mazeSettings.pointString)
+        self.pointsLbl.pack(side="bottom", pady = 10)
+
+        self.chooseStartPointBtn = tk.Button(self.pointFrame, text = "Choose Start point", command = self.chooseStartPoint)
+        self.chooseStartPointBtn.pack(side="left", pady = 10)
+
+        self.chooseEndPointBtn = tk.Button(self.pointFrame, text = "Choose End point", command = self.chooseEndPoint)
+        self.chooseEndPointBtn.pack(side="left", pady = 10)
 
         self.showWayProcChkb = tk.Checkbutton(self.leftFrame, text="Show find way process", variable=self.mazeSettings.showWay, onvalue=1, offvalue=0)
         self.showWayProcChkb.pack(side = "top", pady = 10)
@@ -99,6 +112,21 @@ class Application(tk.Frame):
                 self.after((i+1)*100, self.drawWayPoint, x, y)
             else:
                 self.drawWayPoint(points[i].i, points[i].j)
+
+    def callbackStart(self, event):
+        print("clicked at {0}:{1}".format(event.x, event.y))
+
+    def callbackEnd(self, event):
+        print("clicked at {0}:{1}".format(event.x, event.y))
+
+    def chooseStartPoint(self):
+        self.canvas.focus_set()
+        self.canvas.bind("<Button-1>", self.callbackStart)
+
+    def chooseEndPoint(self):
+        self.canvas.focus_set()
+        self.canvas.bind("<Button-1>", self.callbackEnd)
+        
     
     def draw_horizontal_line(self, i, j):
         self.canvas.create_line(15+j*15, 15+(i+1)*15, 30+j*15, 15+(i+1)*15, tag="{0}:{1}".format(i,j))
