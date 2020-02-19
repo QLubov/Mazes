@@ -21,6 +21,11 @@ class Logic:
         self.methodList = ["SideWinder", "Eller's Algorithm"]
         self.method.set(self.methodList[0])
 
+    def reset(self):
+        self.maze = None
+        self.wayGraph = None
+        self.way = []
+
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
@@ -54,20 +59,23 @@ class Application(tk.Frame):
         self.hEntry = tk.Entry(self.sizeFrame, width = 3)
         self.hEntry.pack(side = "left", pady = 10)
 
-        self.showGenProc = tk.Checkbutton(self.leftFrame, text="Show generation process", variable = self.mazeSettings.showGenerationProcess, onvalue=1, offvalue=0)
-        self.showGenProc.pack(side = "top", pady = 10)
+        self.showGenProcChkb = tk.Checkbutton(self.leftFrame, text="Show generation process", variable = self.mazeSettings.showGenerationProcess, onvalue=1, offvalue=0)
+        self.showGenProcChkb.pack(side = "top", pady = 10)
 
         self.chooseMethod = tk.OptionMenu(self.leftFrame, self.mazeSettings.method, *self.mazeSettings.methodList)
         self.chooseMethod.pack(side = "top", pady = 10)
 
-        self.generate = tk.Button(self.leftFrame, text = "Generate Maze", command = self.generateMaze)
-        self.generate.pack(side="top", pady = 10)
+        self.generateBtn = tk.Button(self.leftFrame, text = "Generate Maze", command = self.generateMaze)
+        self.generateBtn.pack(side="top", pady = 10)
 
-        self.showWayProc = tk.Checkbutton(self.leftFrame, text="Show find way process", variable=self.mazeSettings.showWay, onvalue=1, offvalue=0)
-        self.showWayProc.pack(side = "top", pady = 10)
+        self.showWayProcChkb = tk.Checkbutton(self.leftFrame, text="Show find way process", variable=self.mazeSettings.showWay, onvalue=1, offvalue=0)
+        self.showWayProcChkb.pack(side = "top", pady = 10)
 
-        self.findWay = tk.Button(self.leftFrame, text = "Find Way", command = self.findWay)
-        self.findWay.pack(side="top", pady = 10)
+        self.findWayBtn = tk.Button(self.leftFrame, text = "Find Way", command = self.findWay)
+        self.findWayBtn.pack(side="top", pady = 10)
+
+        self.clearWayBtn = tk.Button(self.leftFrame, text = "Clear Way", command = self.clearWay)
+        self.clearWayBtn.pack(side="top", pady = 10)
 
         self.quit = tk.Button(self.leftFrame, text="QUIT", fg="red", command=self.master.destroy)
         self.quit.pack(side="top", pady = 10)
@@ -77,7 +85,10 @@ class Application(tk.Frame):
     def drawWayPoint(self, i, j):
         #self.canvas.create_oval(15+j*15, (i+1)*15, 30+j*15, 15+(i+1)*15)
         #self.canvas.create_rectangle(15+j*15, (i+1)*15, 30+j*15, 15+(i+1)*15, fill='red', outline='red')
-        self.canvas.create_oval(15+j*15 + 2, (i+1)*15 + 2, 30+j*15 -2, 15+(i+1)*15 - 2, fill='red', outline='red')
+        self.canvas.create_oval(15+j*15 + 2, (i+1)*15 + 2, 30+j*15 -2, 15+(i+1)*15 - 2, fill='red', outline='red', tag = "way")
+
+    def clearWay(self):
+        self.canvas.delete("way")
 
     def drawWay(self, points, showProcess = 0):
         for i in range(len(points)):
@@ -190,19 +201,22 @@ class Application(tk.Frame):
         self.mazeSettings.way = graph.BFS(self.mazeSettings.wayGraph.head, pair(m-2,n-1))        
 
     def getMazeSize(self):
-        entry = self.wEntry.get()
-        if entry != "":
-            entry = int(entry)
-        else:
-            entry = m #default value
-        self.mazeSettings.width = entry
+        try:
+            wEntry = int(self.wEntry.get())
+            if wEntry < 0 or wEntry > 100:
+                raise Exception("incorrect width value; using default value")
+        except:
+            wEntry = m #default value here
 
-        entry = self.hEntry.get()
-        if entry != "":
-            entry = int(entry)
-        else:
-            entry = n #default value
-        self.mazeSettings.heigth = entry
+        try:
+            hEntry = int(self.hEntry.get())
+            if hEntry < 0 or hEntry > 100:
+                raise Exception("incorrect height value; using default value")
+        except:
+            hEntry = n #default value here
+            
+        self.mazeSettings.width = wEntry
+        self.mazeSettings.heigth = hEntry
 
         print("{0}:{1}".format(self.mazeSettings.width, self.mazeSettings.heigth))
 
@@ -213,6 +227,7 @@ class Application(tk.Frame):
         self.canvas.config(width=(self.mazeSettings.heigth+1)*15, height=(self.mazeSettings.width+1)*15)
                 
     def generateMaze(self):
+        self.mazeSettings.reset()
         self.getDataFromUI()
         if self.mazeSettings.method.get() == "SideWinder":
             self.mazeSettings.maze = mazeLib.GenerateSidewinderMaze(self.mazeSettings.width, self.mazeSettings.heigth)
@@ -221,24 +236,11 @@ class Application(tk.Frame):
         else:
             print("Algorithm {0} is not supported!".format(self.mazeSettings.method.get()))
             return
-        #maze = mazeLib.GenerateSidewinderMaze(m, n)
-        #maze = mazeLib.GenerateEllerMaze(m,n)
-        #maze = CreateEmptyMaze(m, n)
-        #PrintMaze(maze, m ,n)
-        #print("{0}:{1};{2}".format(self.mazeSettings.width, self.mazeSettings.heigth, self.mazeSettings.showGenerationProcess))
+        
         self.redrawMaze(self.mazeSettings.width, self.mazeSettings.heigth, self.mazeSettings.maze, self.mazeSettings.showGenerationProcess.get())
-        #self.redrawMazeProcess(m, n, maze)
-        #self.findWay(maze, m, n)
-        #print("hi there, everyone!")
-
     
 
 root = tk.Tk()
 app = Application(master=root)
 app.mainloop()
 
-
-#matrix = CreateEmptyMaze(m, n)
-#GenerateEllerMaze(m,n)
-#GenerateSidewinderMaze(m, n)
-#GenerateSidewinderMazeInt(m,n)
