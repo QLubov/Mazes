@@ -21,6 +21,8 @@ class Logic:
         self.methodList = ["SideWinder", "Eller's Algorithm"]
         self.method.set(self.methodList[0])
         self.pointString = tk.StringVar()
+        self.startPoint = pair(0, 0)
+        self.endPoint = pair(0, 0)
 
     def reset(self):
         self.maze = None
@@ -113,11 +115,21 @@ class Application(tk.Frame):
             else:
                 self.drawWayPoint(points[i].i, points[i].j)
 
+    def coordinatesToIndexes(self, x, y):
+        cX = x // 15
+        cY = y // 15
+        return pair(cX, cY)
+        
+
     def callbackStart(self, event):
         print("clicked at {0}:{1}".format(event.x, event.y))
+        self.mazeSettings.startPoint = self.coordinatesToIndexes(event.x, event.y)
+        self.mazeSettings.pointString.set("from {0}:{1} to {2}:{3}".format(self.mazeSettings.startPoint.i, self.mazeSettings.startPoint.j, self.mazeSettings.endPoint.i, self.mazeSettings.endPoint.j))
 
     def callbackEnd(self, event):
         print("clicked at {0}:{1}".format(event.x, event.y))
+        self.mazeSettings.endPoint = self.coordinatesToIndexes(event.x, event.y)
+        self.mazeSettings.pointString.set("from {0}:{1} to {2}:{3}".format(self.mazeSettings.startPoint.i, self.mazeSettings.startPoint.j, self.mazeSettings.endPoint.i, self.mazeSettings.endPoint.j))
 
     def chooseStartPoint(self):
         self.canvas.focus_set()
