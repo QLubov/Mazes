@@ -15,6 +15,11 @@ class Logic:
         self.showGenerationProcess = tk.IntVar()
         self.showWay = tk.IntVar()
         self.maze = None
+        self.wayGraph = None
+        self.way = []
+        self.method = tk.StringVar()        
+        self.methodList = ["SideWinder", "Eller's Algorithm"]
+        self.method.set(self.methodList[0])
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -28,6 +33,7 @@ class Application(tk.Frame):
     def create_widgets(self):
         self.leftFrame = tk.Frame(self)
         self.rightFrame = tk.Frame(self)
+        
         self.sizeFrame = tk.Frame(self.leftFrame, bd = 2, relief = tk.GROOVE)
 
         self.leftFrame.pack(side = "left")
@@ -37,7 +43,7 @@ class Application(tk.Frame):
         self.canvas.pack(side = "top")
         #self.canvas.config(width=1000, height=1000)
         
-        self.sizeFrame.pack(side = "top")
+        self.sizeFrame.pack(side = "top", padx = 10, pady = 10)
 
         self.sizeLabel = tk.Label(self.sizeFrame, text = "Enter maze size width x heigth:")
         self.sizeLabel.pack(side = "top", pady = 10)
@@ -50,6 +56,9 @@ class Application(tk.Frame):
 
         self.showGenProc = tk.Checkbutton(self.leftFrame, text="Show generation process", variable = self.mazeSettings.showGenerationProcess, onvalue=1, offvalue=0)
         self.showGenProc.pack(side = "top", pady = 10)
+
+        self.chooseMethod = tk.OptionMenu(self.leftFrame, self.mazeSettings.method, *self.mazeSettings.methodList)
+        self.chooseMethod.pack(side = "top", pady = 10)
 
         self.generate = tk.Button(self.leftFrame, text = "Generate Maze", command = self.generateMaze)
         self.generate.pack(side="top", pady = 10)
@@ -70,7 +79,7 @@ class Application(tk.Frame):
         #self.canvas.create_rectangle(15+j*15, (i+1)*15, 30+j*15, 15+(i+1)*15, fill='red', outline='red')
         self.canvas.create_oval(15+j*15 + 2, (i+1)*15 + 2, 30+j*15 -2, 15+(i+1)*15 - 2, fill='red', outline='red')
 
-    def drawWay(self, points, showProcess = False):
+    def drawWay(self, points, showProcess = 0):
         for i in range(len(points)):
             if showProcess:
                 x = points[i].i
@@ -174,11 +183,11 @@ class Application(tk.Frame):
 
     def findWay(self):
         self.findWayInMaze(self.mazeSettings.maze, self.mazeSettings.width, self.mazeSettings.heigth)
+        self.drawWay(self.mazeSettings.way, self.mazeSettings.showWay.get())
 
     def findWayInMaze(self, maze, m, n):
-        graf = graph.matrixToGraph(maze, m, n)
-        way = graph.BFS(graf.head, pair(m-2,n-1))
-        self.drawWay(way, True)
+        self.mazeSettings.wayGraph = graph.matrixToGraph(maze, m, n)
+        self.mazeSettings.way = graph.BFS(self.mazeSettings.wayGraph.head, pair(m-2,n-1))        
 
     def getMazeSize(self):
         entry = self.wEntry.get()
@@ -199,12 +208,19 @@ class Application(tk.Frame):
 
     def getDataFromUI(self):
         self.getMazeSize()
+        print("genProc = {0}; useAlg = {1}; wayProc = {2}".format(self.mazeSettings.showGenerationProcess.get(), self.mazeSettings.method.get(), self.mazeSettings.showWay.get()))
         ##TODO: width and height vice versa?? Fix it
         self.canvas.config(width=(self.mazeSettings.heigth+1)*15, height=(self.mazeSettings.width+1)*15)
                 
     def generateMaze(self):
         self.getDataFromUI()
-        self.mazeSettings.maze = mazeLib.GenerateSidewinderMaze(self.mazeSettings.width, self.mazeSettings.heigth)
+        if self.mazeSettings.method.get() == "SideWinder":
+            self.mazeSettings.maze = mazeLib.GenerateSidewinderMaze(self.mazeSettings.width, self.mazeSettings.heigth)
+        elif self.mazeSettings.method.get() == "Eller's Algorithm":
+            self.mazeSettings.maze = mazeLib.GenerateEllerMaze(self.mazeSettings.width, self.mazeSettings.heigth)
+        else:
+            print("Algorithm {0} is not supported!".format(self.mazeSettings.method.get()))
+            return
         #maze = mazeLib.GenerateSidewinderMaze(m, n)
         #maze = mazeLib.GenerateEllerMaze(m,n)
         #maze = CreateEmptyMaze(m, n)
