@@ -131,19 +131,36 @@ class Application(tk.Frame):
         #self.canvas.create_rectangle(15+j*15, (i+1)*15, 30+j*15, 15+(i+1)*15, fill='red', outline='red')
         self.canvas.create_oval(15+j*15 + 2, (i+1)*15 + 2, 30+j*15 -2, 15+(i+1)*15 - 2, fill='red', outline='red', tag = "way")
 
+    #avoid separate method if possible
+    def drawWayLine(self, fromi, fromj, toi, toj):
+        self.canvas.create_line(15*(fromj+1)+8, 15*(fromi+1)+8, 15*(toj+1)+8, 15*(toi+1)+8, fill='red', tag = "way", width=2)
+
     def clearWay(self):
         self.canvas.delete("way")
 
-    def drawWay(self, points, showProcess = 0):
+    #avoid duplicating code
+    def drawWay(self, points, showProcess = 0, pattern = "oval"):
         points.reverse()
-        for i in range(len(points)):
-            if showProcess:
-                x = points[i].i
-                y = points[i].j
-                #print("{0}:{1}".format(x, y))
-                self.after((i+1)*100, self.drawWayPoint, x, y)
-            else:
-                self.drawWayPoint(points[i].i, points[i].j)
+        if pattern == "oval":
+            for i in range(len(points)):
+                if showProcess:
+                    x = points[i].i
+                    y = points[i].j
+                    #print("{0}:{1}".format(x, y))
+                    self.after((i+1)*100, self.drawWayPoint, x, y)
+                else:
+                    self.drawWayPoint(points[i].i, points[i].j)
+        elif pattern == "line":
+            for i in range(len(points)-1):
+                if showProcess:
+                    x = points[i].i
+                    y = points[i].j
+                    x1 = points[i+1].i
+                    y1 = points[i+1].j
+                    #print("{0}:{1}".format(x, y))
+                    self.after((i+1)*100, self.drawWayLine, x, y, x1, y1)
+                else:
+                    self.drawWayLine(points[i].i, points[i].j, points[i+1].i, points[i+1].j)
 
     def coordinatesToIndexes(self, x, y):
         cX = x // 15 
@@ -265,7 +282,7 @@ class Application(tk.Frame):
 
     def findWay(self):
         self.findWayInMaze(self.mazeSettings.maze, self.mazeSettings.width, self.mazeSettings.height)
-        self.drawWay(self.mazeSettings.way, self.mazeSettings.showWay.get())
+        self.drawWay(self.mazeSettings.way, self.mazeSettings.showWay.get(), pattern = "line")
 
     def findWayInMaze(self, maze, m, n):
         if self.mazeSettings.maze == None:
