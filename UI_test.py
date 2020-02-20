@@ -268,6 +268,8 @@ class Application(tk.Frame):
         self.drawWay(self.mazeSettings.way, self.mazeSettings.showWay.get())
 
     def findWayInMaze(self, maze, m, n):
+        if self.mazeSettings.maze == None:
+            return
         if self.mazeSettings.endPoint.isNull():
             self.mazeSettings.endPoint = pair(self.mazeSettings.width - 1, self.mazeSettings.height - 1)
         self.mazeSettings.wayGraph = graph.matrixToGraph(maze, m, n, self.mazeSettings.startPoint)
