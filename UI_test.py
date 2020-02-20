@@ -23,6 +23,8 @@ class Logic:
         self.startPoint = pair(0, 0)
         self.endPoint = pair(self.width - 1, self.height - 1)
         self.pointString = tk.StringVar(value = ("from {0}:{1} to {2}:{3}".format(0, 0, self.width - 1, self.height - 1)))
+        self.wayPointPattern = tk.StringVar(value = "oval")
+        self.wayColor = tk.StringVar(value = "red")
 
     def reset(self):
         self.maze = None
@@ -58,6 +60,8 @@ class Application(tk.Frame):
         self.pointFrame = tk.Frame(self.wayFrame)
         self.poinlblFrame = tk.LabelFrame(self.pointFrame, bd = 2, relief = tk.GROOVE, text = "Points")
         self.chkBox2Frame = tk.Frame(self.wayFrame)
+        self.drawOptFrame = tk.Frame(self.wayFrame)
+        self.drawOptLblFrame = tk.LabelFrame(self.drawOptFrame, bd = 2, relief = tk.GROOVE, text = "Draw pattern")        
         self.btn2Frame = tk.Frame(self.wayFrame)
         self.btn3Frame = tk.Frame(self.wayFrame)
 
@@ -79,6 +83,8 @@ class Application(tk.Frame):
         self.pointFrame.pack(side = "top", fill = tk.X)
         self.poinlblFrame.pack(side = "left", padx = 10)
         self.chkBox2Frame.pack(side = "top", fill = tk.X)
+        self.drawOptFrame.pack(side = "top", fill = tk.X)
+        self.drawOptLblFrame.pack(side = "left", padx = 10)
         self.btn2Frame.pack(side = "top", fill = tk.X)
         self.btn3Frame.pack(side = "top", fill = tk.X)
 
@@ -97,6 +103,8 @@ class Application(tk.Frame):
         self.chooseStartPointBtn = tk.Button(self.poinlblFrame, text = "Start", command = self.chooseStartPoint)
         self.chooseEndPointBtn = tk.Button(self.poinlblFrame, text = "End ", command = self.chooseEndPoint)
         self.showWayProcChkb = tk.Checkbutton(self.chkBox2Frame, text="Show find way process", variable=self.mazeSettings.showWay, onvalue=1, offvalue=0)
+        self.patternList = tk.OptionMenu(self.drawOptLblFrame, self.mazeSettings.wayPointPattern, "oval", "line")
+        self.colorList = tk.OptionMenu(self.drawOptLblFrame,  self.mazeSettings.wayColor, "red", "green", "cyan", "yellow", "magenta", "blue")
         self.findWayBtn = tk.Button(self.btn2Frame, text = "Find Way", command = self.findWay)
         self.clearWayBtn = tk.Button(self.btn3Frame, text = "Clear Way", command = self.clearWay)
 
@@ -110,58 +118,61 @@ class Application(tk.Frame):
         self.hEntry.pack(side = "left", pady = 10, padx = 10)        
         self.algLabel.pack(side = "left", padx = 10)        
         self.chooseMethod.pack(side = "left", padx = 10)        
-        self.showGenProcChkb.pack(side = "left", pady = 10, padx = 10)        
+        self.showGenProcChkb.pack(side = "left", pady = 0, padx = 10)        
         self.generateBtn.pack(side="right", pady = 10, padx = 10)
         
         self.pointsLbl.pack(side="bottom", pady = 10)        
         self.chooseStartPointBtn.pack(side="left", pady = 10, padx = 10)        
-        self.chooseEndPointBtn.pack(side="left", pady = 10, padx = 10)        
-        self.showWayProcChkb.pack(side = "left", pady = 10, fill = tk.X, padx = 10)        
-        self.findWayBtn.pack(side="right", padx = 10)        
-        self.clearWayBtn.pack(side="right", pady = 10, padx = 10)
+        self.chooseEndPointBtn.pack(side="left", pady = 10, padx = 10)
+        self.showWayProcChkb.pack(side = "left", pady = 10, fill = tk.X, padx = 10)
+        self.patternList.pack(side = "left", fill = tk.X, padx = 10, pady = 10)
+        self.colorList.pack(side = "left", fill = tk.X, padx = 10, pady = 10)
+        
+        self.findWayBtn.pack(side="right", padx = 10, pady = 5)        
+        self.clearWayBtn.pack(side="right", pady = 5, padx = 10)
         
         self.canvas.pack(side = "top", padx = 10, pady = 10)
         
-        self.quit.pack(side="top", pady = 10)
+        self.quit.pack(side="top", pady = 8)
 
         self.pack()
+
+        self.colorList.config(width = 7)
+        self.patternList.config(width = 5)
 
     def drawWayPoint(self, i, j):
         #self.canvas.create_oval(15+j*15, (i+1)*15, 30+j*15, 15+(i+1)*15)
         #self.canvas.create_rectangle(15+j*15, (i+1)*15, 30+j*15, 15+(i+1)*15, fill='red', outline='red')
-        self.canvas.create_oval(15+j*15 + 2, (i+1)*15 + 2, 30+j*15 -2, 15+(i+1)*15 - 2, fill='red', outline='red', tag = "way")
+        self.canvas.create_oval(15+j*15 + 2, (i+1)*15 + 2, 30+j*15 -2, 15+(i+1)*15 - 2, fill=self.mazeSettings.wayColor.get(), outline=self.mazeSettings.wayColor.get(), tag = "way")
 
     #avoid separate method if possible
     def drawWayLine(self, fromi, fromj, toi, toj):
-        self.canvas.create_line(15*(fromj+1)+8, 15*(fromi+1)+8, 15*(toj+1)+8, 15*(toi+1)+8, fill='red', tag = "way", width=2)
+        self.canvas.create_line(15*(fromj+1)+8, 15*(fromi+1)+8, 15*(toj+1)+8, 15*(toi+1)+8, fill=self.mazeSettings.wayColor.get(), tag = "way", width=2)
 
     def clearWay(self):
         self.canvas.delete("way")
 
+    def drawWayWrapper(self, drawMethod, flag, args):
+        #print(args[0])
+        delay = args.pop(0)
+        if flag:
+            self.after(delay, drawMethod, *args)
+        else:
+            drawMethod(*args)
+
     #avoid duplicating code
     def drawWay(self, points, showProcess = 0, pattern = "oval"):
         points.reverse()
-        if pattern == "oval":
-            for i in range(len(points)):
-                if showProcess:
-                    x = points[i].i
-                    y = points[i].j
-                    #print("{0}:{1}".format(x, y))
-                    self.after((i+1)*100, self.drawWayPoint, x, y)
-                else:
-                    self.drawWayPoint(points[i].i, points[i].j)
-        elif pattern == "line":
-            for i in range(len(points)-1):
-                if showProcess:
-                    x = points[i].i
-                    y = points[i].j
-                    x1 = points[i+1].i
-                    y1 = points[i+1].j
-                    #print("{0}:{1}".format(x, y))
-                    self.after((i+1)*100, self.drawWayLine, x, y, x1, y1)
-                else:
-                    self.drawWayLine(points[i].i, points[i].j, points[i+1].i, points[i+1].j)
+        for i in range(len(points)):
+            if pattern == "oval":
+                self.drawWayWrapper(self.drawWayPoint, showProcess, [(i+1)*100, points[i].i, points[i].j])
+            elif pattern == "line":
+                if i < len(points) - 1:
+                    self.drawWayWrapper(self.drawWayLine, showProcess, [(i+1)*100, points[i].i, points[i].j, points[i+1].i, points[i+1].j])
+            else:
+                print("incorrect pattern ")
 
+                
     def coordinatesToIndexes(self, x, y):
         cX = x // 15 
         cY = y // 15
@@ -201,7 +212,7 @@ class Application(tk.Frame):
             self.draw_vertical_line(i, -1)
             for j in range(n):
                 if maze[i][j].walls == 3:
-                    pass
+                   pass
                 elif maze[i][j].walls == 2:
                     self.draw_vertical_line(i, j)
                 elif maze[i][j].walls == 1:
@@ -282,7 +293,7 @@ class Application(tk.Frame):
 
     def findWay(self):
         self.findWayInMaze(self.mazeSettings.maze, self.mazeSettings.width, self.mazeSettings.height)
-        self.drawWay(self.mazeSettings.way, self.mazeSettings.showWay.get(), pattern = "line")
+        self.drawWay(self.mazeSettings.way, self.mazeSettings.showWay.get(), self.mazeSettings.wayPointPattern.get())
 
     def findWayInMaze(self, maze, m, n):
         if self.mazeSettings.maze == None:
