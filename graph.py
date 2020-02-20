@@ -10,6 +10,11 @@ class pair:
             return True
         return False
 
+    def isNull(self):
+        if self.i == 0 and self.j == 0:
+            return True
+        return False
+
     def printPair(self):
         print("{0}:{1}".format(self.i, self.j))
         
@@ -100,10 +105,11 @@ def CreateEmptyItemMatrix(m, n):
 
     return matr
 
-def matrixToGraph(matrix, m, n):
+def matrixToGraph(matrix, m, n, fromPoint = pair(0,0)):
     #head = item(pair(0,0))
     im = CreateEmptyItemMatrix(m,n)
-    res = graph(im[0][0])
+    #res = graph(im[0][0])
+    res = graph(im[fromPoint.i][fromPoint.j])
     for i in range(m):
         for j in range(n):
             #curr = item(pair(0,0))

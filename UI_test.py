@@ -28,6 +28,9 @@ class Logic:
         self.maze = None
         self.wayGraph = None
         self.way = []
+        self.startPoint = pair(0, 0)
+        self.endPoint = pair(0, 0)
+        self.pointString.set("from {0}:{1} to {2}:{3}".format(0, 0, self.width - 1, self.height - 1))
 
 class Application(tk.Frame):
     def __init__(self, master=None):
@@ -106,6 +109,7 @@ class Application(tk.Frame):
         self.canvas.delete("way")
 
     def drawWay(self, points, showProcess = 0):
+        points.reverse()
         for i in range(len(points)):
             if showProcess:
                 x = points[i].i
@@ -116,11 +120,13 @@ class Application(tk.Frame):
                 self.drawWayPoint(points[i].i, points[i].j)
 
     def coordinatesToIndexes(self, x, y):
-        cX = x // 15
+        cX = x // 15 
         cY = y // 15
-        return pair(cX, cY)
+        if cX == 0 or cY == 0:
+            print("incorrect area; using default point")
+            return pair(0,0)
+        return pair(cY-1, cX-1) #why???
         
-
     def callbackStart(self, event):
         print("clicked at {0}:{1}".format(event.x, event.y))
         self.mazeSettings.startPoint = self.coordinatesToIndexes(event.x, event.y)
@@ -233,12 +239,14 @@ class Application(tk.Frame):
         return matrix
 
     def findWay(self):
-        self.findWayInMaze(self.mazeSettings.maze, self.mazeSettings.width, self.mazeSettings.heigth)
+        self.findWayInMaze(self.mazeSettings.maze, self.mazeSettings.width, self.mazeSettings.height)
         self.drawWay(self.mazeSettings.way, self.mazeSettings.showWay.get())
 
     def findWayInMaze(self, maze, m, n):
-        self.mazeSettings.wayGraph = graph.matrixToGraph(maze, m, n)
-        self.mazeSettings.way = graph.BFS(self.mazeSettings.wayGraph.head, pair(m-2,n-1))        
+        if self.mazeSettings.endPoint.isNull():
+            self.mazeSettings.endPoint = pair(self.mazeSettings.width - 1, self.mazeSettings.height - 1)
+        self.mazeSettings.wayGraph = graph.matrixToGraph(maze, m, n, self.mazeSettings.startPoint)
+        self.mazeSettings.way = graph.BFS(self.mazeSettings.wayGraph.head, self.mazeSettings.endPoint)#pair(m-2,n-1))        
 
     def getMazeSize(self):
         try:
@@ -256,28 +264,29 @@ class Application(tk.Frame):
             hEntry = n #default value here
             
         self.mazeSettings.width = wEntry
-        self.mazeSettings.heigth = hEntry
+        self.mazeSettings.height = hEntry
 
-        print("{0}:{1}".format(self.mazeSettings.width, self.mazeSettings.heigth))
+        print("{0}:{1}".format(self.mazeSettings.width, self.mazeSettings.height))
 
     def getDataFromUI(self):
         self.getMazeSize()
         print("genProc = {0}; useAlg = {1}; wayProc = {2}".format(self.mazeSettings.showGenerationProcess.get(), self.mazeSettings.method.get(), self.mazeSettings.showWay.get()))
         ##TODO: width and height vice versa?? Fix it
-        self.canvas.config(width=(self.mazeSettings.heigth+1)*15, height=(self.mazeSettings.width+1)*15)
+        self.canvas.config(width=(self.mazeSettings.height+1)*15, height=(self.mazeSettings.width+1)*15)
+        self.mazeSettings.pointString.set("from {0}:{1} to {2}:{3}".format(0, 0, self.mazeSettings.width - 1, self.mazeSettings.height - 1))
                 
     def generateMaze(self):
         self.mazeSettings.reset()
         self.getDataFromUI()
         if self.mazeSettings.method.get() == "SideWinder":
-            self.mazeSettings.maze = mazeLib.GenerateSidewinderMaze(self.mazeSettings.width, self.mazeSettings.heigth)
+            self.mazeSettings.maze = mazeLib.GenerateSidewinderMaze(self.mazeSettings.width, self.mazeSettings.height)
         elif self.mazeSettings.method.get() == "Eller's Algorithm":
-            self.mazeSettings.maze = mazeLib.GenerateEllerMaze(self.mazeSettings.width, self.mazeSettings.heigth)
+            self.mazeSettings.maze = mazeLib.GenerateEllerMaze(self.mazeSettings.width, self.mazeSettings.height)
         else:
             print("Algorithm {0} is not supported!".format(self.mazeSettings.method.get()))
             return
         
-        self.redrawMaze(self.mazeSettings.width, self.mazeSettings.heigth, self.mazeSettings.maze, self.mazeSettings.showGenerationProcess.get())
+        self.redrawMaze(self.mazeSettings.width, self.mazeSettings.height, self.mazeSettings.maze, self.mazeSettings.showGenerationProcess.get())
     
 
 root = tk.Tk()
