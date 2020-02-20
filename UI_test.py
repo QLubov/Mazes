@@ -43,58 +43,100 @@ class Application(tk.Frame):
         #self.after_id = 0
 
     def create_widgets(self):
+        ####################  Frames  ###############################
         self.leftFrame = tk.Frame(self)
         self.rightFrame = tk.Frame(self, bd = 2, relief = tk.RIDGE)
-        
-        self.sizeFrame = tk.Frame(self.leftFrame, bd = 2, relief = tk.GROOVE)
-        self.pointFrame = tk.Frame(self.leftFrame, bd = 2, relief = tk.GROOVE)
 
-        self.leftFrame.pack(side = "left")
+        self.generationFrame = tk.LabelFrame(self.leftFrame, bd = 2, relief = tk.GROOVE, text = "Generation")
+        self.sizeFrame = tk.Frame(self.generationFrame)
+        self.sizelblFrame = tk.LabelFrame(self.sizeFrame, bd = 2, relief = tk.GROOVE, text = "Size")
+        self.lbl2Frame = tk.Frame(self.generationFrame)
+        self.optionList1Frame = tk.Frame(self.generationFrame)
+        self.chkBox1Frame = tk.Frame(self.generationFrame)
+        self.btn1Frame = tk.Frame(self.generationFrame)
+
+        self.wayFrame = tk.LabelFrame(self.leftFrame, bd = 2, relief = tk.GROOVE, text = "Find way")
+        self.pointFrame = tk.Frame(self.wayFrame)
+        self.poinlblFrame = tk.LabelFrame(self.pointFrame, bd = 2, relief = tk.GROOVE, text = "Points")
+        self.chkBox2Frame = tk.Frame(self.wayFrame)
+        self.btn2Frame = tk.Frame(self.wayFrame)
+        self.btn3Frame = tk.Frame(self.wayFrame)
+        
+
+        self.leftFrame.pack(side = "left", padx = 10, pady = 10)
         self.rightFrame.pack(side = "right", padx = 10, pady = 10)
+
+        self.generationFrame.pack(side = "top", fill = tk.X)
+        self.sizeFrame.pack(side = "top", fill = tk.X)
+        self.sizelblFrame.pack(side = "left", padx = 10)
+        self.lbl2Frame.pack(side = "top", fill = tk.X)
+        self.optionList1Frame.pack(side = "top", fill = tk.X)
+        self.chkBox1Frame.pack(side = "top", fill = tk.X)
+        self.btn1Frame.pack(side = "top", fill = tk.X)
+
+        self.wayFrame.pack(side = "top", fill = tk.X)
+        self.pointFrame.pack(side = "top", fill = tk.X)
+        self.poinlblFrame.pack(side = "left", padx = 10)
+        self.chkBox2Frame.pack(side = "top", fill = tk.X)
+        self.btn2Frame.pack(side = "top", fill = tk.X)
+        self.btn3Frame.pack(side = "top", fill = tk.X) 
+
+        #############################################################
         
         self.canvas = tk.Canvas(self.rightFrame, width = (self.mazeSettings.height+1)*15, height=(self.mazeSettings.width+1)*15)
         self.canvas.pack(side = "top", padx = 10, pady = 10)
         #self.canvas.config(width=1000, height=1000)
         
-        self.sizeFrame.pack(side = "top", padx = 10, pady = 10)
+        #self.sizeFrame.pack(side = "top", padx = 10, pady = 10)
 
-        self.sizeLabel = tk.Label(self.sizeFrame, text = "Enter maze size width x heigth:")
-        self.sizeLabel.pack(side = "top", pady = 10)
+        #self.sizeLabel = tk.Label(self.sizeFrame, text = "Enter maze size width x heigth:")
+        #self.sizeLabel.pack(side = "top", pady = 10)
 
-        self.wEntry = tk.Entry(self.sizeFrame, width = 3)
-        self.wEntry.pack(side = "left", pady = 10)
+        self.wEntry = tk.Entry(self.sizelblFrame, width = 3)
+        self.wEntry.pack(side = "left", pady = 10, padx = 10)
 
-        self.hEntry = tk.Entry(self.sizeFrame, width = 3)
-        self.hEntry.pack(side = "left", pady = 10)
+        self.sizeLabel = tk.Label(self.sizelblFrame, text = " x ")
+        self.sizeLabel.pack(side = "left", pady = 10)
 
-        self.showGenProcChkb = tk.Checkbutton(self.leftFrame, text="Show generation process", variable = self.mazeSettings.showGenerationProcess, onvalue=1, offvalue=0)
-        self.showGenProcChkb.pack(side = "top", pady = 10)
+        self.hEntry = tk.Entry(self.sizelblFrame, width = 3)
+        self.hEntry.pack(side = "left", pady = 10, padx = 10)
 
-        self.chooseMethod = tk.OptionMenu(self.leftFrame, self.mazeSettings.method, *self.mazeSettings.methodList)
-        self.chooseMethod.pack(side = "top", pady = 10)
+        self.algLabel = tk.Label(self.lbl2Frame, text = "Choose algorithm:")
+        self.algLabel.pack(side = "left", padx = 10)
 
-        self.generateBtn = tk.Button(self.leftFrame, text = "Generate Maze", command = self.generateMaze)
-        self.generateBtn.pack(side="top", pady = 10)
+        self.chooseMethod = tk.OptionMenu(self.optionList1Frame, self.mazeSettings.method, *self.mazeSettings.methodList)
+        self.chooseMethod.pack(side = "left", padx = 10)
 
-        self.pointFrame.pack(side = "top", padx = 10, pady = 10)
+        self.showGenProcChkb = tk.Checkbutton(self.chkBox1Frame, text="Show generation process", variable = self.mazeSettings.showGenerationProcess, onvalue=1, offvalue=0)
+        self.showGenProcChkb.pack(side = "left", pady = 10, padx = 10)        
 
-        self.pointsLbl = tk.Label(self.pointFrame, bd = 2, relief = tk.GROOVE, textvariable = self.mazeSettings.pointString)
+        self.generateBtn = tk.Button(self.btn1Frame, text = "Generate Maze", command = self.generateMaze)
+        self.generateBtn.pack(side="right", pady = 10, padx = 10)
+
+        #self.update()
+        #self.sizeFrame.config(width = self.generationFrame.winfo_reqwidth() - 1)
+        #print("{0} {1}".format(self.generationFrame.winfo_reqwidth(), self.sizeFrame.winfo_reqwidth()))
+        #self.update()
+
+        #self.pointFrame.pack(side = "top", padx = 10, pady = 10)
+
+        self.pointsLbl = tk.Label(self.poinlblFrame, bd = 2, relief = tk.GROOVE, textvariable = self.mazeSettings.pointString)
         self.pointsLbl.pack(side="bottom", pady = 10)
 
-        self.chooseStartPointBtn = tk.Button(self.pointFrame, text = "Choose Start point", command = self.chooseStartPoint)
-        self.chooseStartPointBtn.pack(side="left", pady = 10)
+        self.chooseStartPointBtn = tk.Button(self.poinlblFrame, text = "Start", command = self.chooseStartPoint)
+        self.chooseStartPointBtn.pack(side="left", pady = 10, padx = 10)
 
-        self.chooseEndPointBtn = tk.Button(self.pointFrame, text = "Choose End point", command = self.chooseEndPoint)
-        self.chooseEndPointBtn.pack(side="left", pady = 10)
+        self.chooseEndPointBtn = tk.Button(self.poinlblFrame, text = "End ", command = self.chooseEndPoint)
+        self.chooseEndPointBtn.pack(side="left", pady = 10, padx = 10)
 
-        self.showWayProcChkb = tk.Checkbutton(self.leftFrame, text="Show find way process", variable=self.mazeSettings.showWay, onvalue=1, offvalue=0)
-        self.showWayProcChkb.pack(side = "top", pady = 10)
+        self.showWayProcChkb = tk.Checkbutton(self.chkBox2Frame, text="Show find way process", variable=self.mazeSettings.showWay, onvalue=1, offvalue=0)
+        self.showWayProcChkb.pack(side = "left", pady = 10, fill = tk.X, padx = 10)
 
-        self.findWayBtn = tk.Button(self.leftFrame, text = "Find Way", command = self.findWay)
-        self.findWayBtn.pack(side="top", pady = 10)
+        self.findWayBtn = tk.Button(self.btn2Frame, text = "Find Way", command = self.findWay)
+        self.findWayBtn.pack(side="right", padx = 10)
 
-        self.clearWayBtn = tk.Button(self.leftFrame, text = "Clear Way", command = self.clearWay)
-        self.clearWayBtn.pack(side="top", pady = 10)
+        self.clearWayBtn = tk.Button(self.btn3Frame, text = "Clear Way", command = self.clearWay)
+        self.clearWayBtn.pack(side="right", pady = 10, padx = 10)
 
         self.quit = tk.Button(self.leftFrame, text="QUIT", fg="red", command=self.master.destroy)
         self.quit.pack(side="top", pady = 10)
