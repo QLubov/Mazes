@@ -5,13 +5,14 @@ from graph import pair
 import tkinter as tk
 import time
 import copy
+import maze_options as defaults
 m = 25
 n = 25
 
 class Logic:
     def __init__(self):
-        self.width = 0
-        self.height = 0
+        self.width = defaults.mazeWidth
+        self.height = defaults.mazeHeight
         self.showGenerationProcess = tk.IntVar()
         self.showWay = tk.IntVar()
         self.maze = None
@@ -22,14 +23,14 @@ class Logic:
         self.method.set(self.methodList[0])
         self.pointString = tk.StringVar()
         self.startPoint = pair(0, 0)
-        self.endPoint = pair(0, 0)
+        self.endPoint = pair(self.width - 1, self.height - 1)
 
     def reset(self):
         self.maze = None
         self.wayGraph = None
         self.way = []
         self.startPoint = pair(0, 0)
-        self.endPoint = pair(0, 0)
+        self.endPoint = pair(self.width - 1, self.height - 1)
         self.pointString.set("from {0}:{1} to {2}:{3}".format(0, 0, self.width - 1, self.height - 1))
 
 class Application(tk.Frame):
@@ -43,16 +44,16 @@ class Application(tk.Frame):
 
     def create_widgets(self):
         self.leftFrame = tk.Frame(self)
-        self.rightFrame = tk.Frame(self)
+        self.rightFrame = tk.Frame(self, bd = 2, relief = tk.RIDGE)
         
         self.sizeFrame = tk.Frame(self.leftFrame, bd = 2, relief = tk.GROOVE)
         self.pointFrame = tk.Frame(self.leftFrame, bd = 2, relief = tk.GROOVE)
 
         self.leftFrame.pack(side = "left")
-        self.rightFrame.pack(side = "right")
+        self.rightFrame.pack(side = "right", padx = 10, pady = 10)
         
-        self.canvas = tk.Canvas(self.rightFrame)
-        self.canvas.pack(side = "top")
+        self.canvas = tk.Canvas(self.rightFrame, width = (self.mazeSettings.height+1)*15, height=(self.mazeSettings.width+1)*15)
+        self.canvas.pack(side = "top", padx = 10, pady = 10)
         #self.canvas.config(width=1000, height=1000)
         
         self.sizeFrame.pack(side = "top", padx = 10, pady = 10)
@@ -254,14 +255,14 @@ class Application(tk.Frame):
             if wEntry < 0 or wEntry > 100:
                 raise Exception("incorrect width value; using default value")
         except:
-            wEntry = m #default value here
+            wEntry = defaults.mazeWidth #default value here
 
         try:
             hEntry = int(self.hEntry.get())
             if hEntry < 0 or hEntry > 100:
                 raise Exception("incorrect height value; using default value")
         except:
-            hEntry = n #default value here
+            hEntry = defaults.mazeHeight #default value here
             
         self.mazeSettings.width = wEntry
         self.mazeSettings.height = hEntry
@@ -272,7 +273,7 @@ class Application(tk.Frame):
         self.getMazeSize()
         print("genProc = {0}; useAlg = {1}; wayProc = {2}".format(self.mazeSettings.showGenerationProcess.get(), self.mazeSettings.method.get(), self.mazeSettings.showWay.get()))
         ##TODO: width and height vice versa?? Fix it
-        self.canvas.config(width=(self.mazeSettings.height+1)*15, height=(self.mazeSettings.width+1)*15)
+        self.canvas.config(width = (self.mazeSettings.height+1)*15, height = (self.mazeSettings.width+1)*15)
         self.mazeSettings.pointString.set("from {0}:{1} to {2}:{3}".format(0, 0, self.mazeSettings.width - 1, self.mazeSettings.height - 1))
                 
     def generateMaze(self):
