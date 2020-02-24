@@ -101,7 +101,7 @@ class Application(tk.Frame):
 
         self.pointsLbl = tk.Label(self.poinlblFrame, bd = 2, relief = tk.GROOVE, textvariable = self.mazeSettings.pointString)
         self.chooseStartPointBtn = tk.Button(self.poinlblFrame, text = "Start", command = self.chooseStartPoint)
-        self.chooseEndPointBtn = tk.Button(self.poinlblFrame, text = "End ", command = self.chooseEndPoint)
+        self.chooseEndPointBtn = tk.Button(self.poinlblFrame, text = "End  ", command = self.chooseEndPoint)
         self.showWayProcChkb = tk.Checkbutton(self.chkBox2Frame, text="Show find way process", variable=self.mazeSettings.showWay, onvalue=1, offvalue=0)
         self.patternList = tk.OptionMenu(self.drawOptLblFrame, self.mazeSettings.wayPointPattern, "oval", "line")
         self.colorList = tk.OptionMenu(self.drawOptLblFrame,  self.mazeSettings.wayColor, "red", "green", "cyan", "yellow", "magenta", "blue")
