@@ -5,32 +5,199 @@ from graph import pair
 import tkinter as tk
 import time
 import copy
-m = 50
-n = 50
+import maze_options as defaults
+
+class Logic:
+    def __init__(self):
+        self.width = defaults.mazeWidth
+        self.height = defaults.mazeHeight
+        self.widthStr = tk.StringVar(value=str(self.width))
+        self.heightStr = tk.StringVar(value=str(self.height))
+        self.showGenerationProcess = tk.IntVar()
+        self.showWay = tk.IntVar()
+        self.maze = None
+        self.wayGraph = None
+        self.way = []        
+        self.methodList = ["SideWinder", "Eller's Algorithm"]
+        self.method = tk.StringVar(value = self.methodList[0])        
+        self.startPoint = pair(0, 0)
+        self.endPoint = pair(self.width - 1, self.height - 1)
+        self.pointString = tk.StringVar(value = ("from {0}:{1} to {2}:{3}".format(0, 0, self.width - 1, self.height - 1)))
+        self.wayPointPattern = tk.StringVar(value = "oval")
+        self.wayColor = tk.StringVar(value = "red")
+
+    def reset(self):
+        self.maze = None
+        self.wayGraph = None
+        self.way = []
+        self.startPoint = pair(0, 0)
+        self.endPoint = pair(self.width - 1, self.height - 1) #bad, in case if width anf height doesn't contain actual value this pair will contain incorrect data
+        self.pointString.set("from {0}:{1} to {2}:{3}".format(0, 0, self.width - 1, self.height - 1))
 
 class Application(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master)
-        self.master = master
-        self.pack()
-        self.canvas = tk.Canvas(master)
+        self.master = master        
+        self.canvas = None       
+        self.mazeSettings = Logic()
         self.create_widgets()
         #self.after_id = 0
+
+    def create_widgets(self):
+        ####################  Frames creating ###############################        
+        self.leftFrame = tk.Frame(self)
+        self.rightFrame = tk.Frame(self)
+
+        self.generationFrame = tk.LabelFrame(self.leftFrame, bd = 2, relief = tk.GROOVE, text = "Generation")
+        self.sizeFrame = tk.Frame(self.generationFrame)
+        self.sizelblFrame = tk.LabelFrame(self.sizeFrame, bd = 2, relief = tk.GROOVE, text = "Size")
+        self.lbl2Frame = tk.Frame(self.generationFrame)
+        self.optionList1Frame = tk.Frame(self.generationFrame)
+        self.chkBox1Frame = tk.Frame(self.generationFrame)
+        self.btn1Frame = tk.Frame(self.generationFrame)
+
+        self.wayFrame = tk.LabelFrame(self.leftFrame, bd = 2, relief = tk.GROOVE, text = "Find way")
+        self.pointFrame = tk.Frame(self.wayFrame)
+        self.poinlblFrame = tk.LabelFrame(self.pointFrame, bd = 2, relief = tk.GROOVE, text = "Points")
+        self.chkBox2Frame = tk.Frame(self.wayFrame)
+        self.drawOptFrame = tk.Frame(self.wayFrame)
+        self.drawOptLblFrame = tk.LabelFrame(self.drawOptFrame, bd = 2, relief = tk.GROOVE, text = "Draw pattern")        
+        self.btn2Frame = tk.Frame(self.wayFrame)
+        self.btn3Frame = tk.Frame(self.wayFrame)
+
+        self.canvasFrame = tk.Frame(self.rightFrame, bd = 2, relief = tk.RIDGE)
+
+        ####################  Frames packing ###############################
+        self.leftFrame.pack(side = "left", padx = 10, fill = tk.BOTH)
+        self.rightFrame.pack(side = "right", padx = 10, fill = tk.BOTH, expand = 1)
+
+        self.generationFrame.pack(side = "top", fill = tk.X)
+        self.sizeFrame.pack(side = "top", fill = tk.X)
+        self.sizelblFrame.pack(side = "left", padx = 10)
+        self.lbl2Frame.pack(side = "top", fill = tk.X)
+        self.optionList1Frame.pack(side = "top", fill = tk.X)
+        self.chkBox1Frame.pack(side = "top", fill = tk.X)
+        self.btn1Frame.pack(side = "top", fill = tk.X)
+
+        self.wayFrame.pack(side = "top", fill = tk.X)
+        self.pointFrame.pack(side = "top", fill = tk.X)
+        self.poinlblFrame.pack(side = "left", padx = 10)
+        self.chkBox2Frame.pack(side = "top", fill = tk.X)
+        self.drawOptFrame.pack(side = "top", fill = tk.X)
+        self.drawOptLblFrame.pack(side = "left", padx = 10)
+        self.btn2Frame.pack(side = "top", fill = tk.X)
+        self.btn3Frame.pack(side = "top", fill = tk.X)
+
+        self.canvasFrame.pack(side = "top", pady = 8)
+
+        ####################  UI elements creating #########################        
+        self.sizeLabel = tk.Label(self.sizelblFrame, text = " x ")
+        self.wEntry = tk.Entry(self.sizelblFrame, textvariable = self.mazeSettings.widthStr, width = 3)        
+        self.hEntry = tk.Entry(self.sizelblFrame, textvariable = self.mazeSettings.heightStr, width = 3)
+        self.algLabel = tk.Label(self.lbl2Frame, text = "Choose algorithm:")
+        self.chooseMethod = tk.OptionMenu(self.optionList1Frame, self.mazeSettings.method, *self.mazeSettings.methodList)
+        self.showGenProcChkb = tk.Checkbutton(self.chkBox1Frame, text="Show generation process", variable = self.mazeSettings.showGenerationProcess, onvalue=1, offvalue=0)
+        self.generateBtn = tk.Button(self.btn1Frame, text = "Generate Maze", command = self.generateMaze)
+
+        self.pointsLbl = tk.Label(self.poinlblFrame, bd = 2, relief = tk.GROOVE, textvariable = self.mazeSettings.pointString)
+        self.chooseStartPointBtn = tk.Button(self.poinlblFrame, text = "Start", command = self.chooseStartPoint)
+        self.chooseEndPointBtn = tk.Button(self.poinlblFrame, text = "End  ", command = self.chooseEndPoint)
+        self.showWayProcChkb = tk.Checkbutton(self.chkBox2Frame, text="Show find way process", variable=self.mazeSettings.showWay, onvalue=1, offvalue=0)
+        self.patternList = tk.OptionMenu(self.drawOptLblFrame, self.mazeSettings.wayPointPattern, "oval", "line")
+        self.colorList = tk.OptionMenu(self.drawOptLblFrame,  self.mazeSettings.wayColor, "red", "green", "cyan", "yellow", "magenta", "blue")
+        self.findWayBtn = tk.Button(self.btn2Frame, text = "Find Way", command = self.findWay)
+        self.clearWayBtn = tk.Button(self.btn3Frame, text = "Clear Way", command = self.clearWay)
+
+        self.canvas = tk.Canvas(self.canvasFrame, width = (self.mazeSettings.height+1)*15, height=(self.mazeSettings.width+1)*15)
+
+        self.quit = tk.Button(self.leftFrame, text="QUIT", fg="red", command=self.master.destroy)
+
+        ####################  UI elements packing ##########################        
+        self.wEntry.pack(side = "left", pady = 10, padx = 10)        
+        self.sizeLabel.pack(side = "left", pady = 10)        
+        self.hEntry.pack(side = "left", pady = 10, padx = 10)        
+        self.algLabel.pack(side = "left", padx = 10)        
+        self.chooseMethod.pack(side = "left", padx = 10)        
+        self.showGenProcChkb.pack(side = "left", pady = 0, padx = 10)        
+        self.generateBtn.pack(side="right", pady = 10, padx = 10)
+        
+        self.pointsLbl.pack(side="bottom", pady = 10)        
+        self.chooseStartPointBtn.pack(side="left", pady = 10, padx = 10)        
+        self.chooseEndPointBtn.pack(side="left", pady = 10, padx = 10)
+        self.showWayProcChkb.pack(side = "left", pady = 10, fill = tk.X, padx = 10)
+        self.patternList.pack(side = "left", fill = tk.X, padx = 10, pady = 10)
+        self.colorList.pack(side = "left", fill = tk.X, padx = 10, pady = 10)
+        
+        self.findWayBtn.pack(side="right", padx = 10, pady = 5)        
+        self.clearWayBtn.pack(side="right", pady = 5, padx = 10)
+        
+        self.canvas.pack(side = "top", padx = 10, pady = 10)
+        
+        self.quit.pack(side="top", pady = 8)
+
+        self.pack()
+
+        self.colorList.config(width = 7)
+        self.patternList.config(width = 5)
 
     def drawWayPoint(self, i, j):
         #self.canvas.create_oval(15+j*15, (i+1)*15, 30+j*15, 15+(i+1)*15)
         #self.canvas.create_rectangle(15+j*15, (i+1)*15, 30+j*15, 15+(i+1)*15, fill='red', outline='red')
-        self.canvas.create_oval(15+j*15 + 2, (i+1)*15 + 2, 30+j*15 -2, 15+(i+1)*15 - 2, fill='red', outline='red')
+        self.canvas.create_oval(15+j*15 + 2, (i+1)*15 + 2, 30+j*15 -2, 15+(i+1)*15 - 2, fill=self.mazeSettings.wayColor.get(), outline=self.mazeSettings.wayColor.get(), tag = "way")
 
-    def drawWay(self, points, showProcess = False):
+    #avoid separate method if possible
+    def drawWayLine(self, fromi, fromj, toi, toj):
+        self.canvas.create_line(15*(fromj+1)+8, 15*(fromi+1)+8, 15*(toj+1)+8, 15*(toi+1)+8, fill=self.mazeSettings.wayColor.get(), tag = "way", width=2)
+
+    def clearWay(self):
+        self.canvas.delete("way")
+
+    def drawWayWrapper(self, drawMethod, flag, args):
+        #print(args[0])
+        delay = args.pop(0)
+        if flag:
+            self.after(delay, drawMethod, *args)
+        else:
+            drawMethod(*args)
+
+    #avoid duplicating code
+    def drawWay(self, points, showProcess = 0, pattern = "oval"):
+        points.reverse()
         for i in range(len(points)):
-            if showProcess:
-                x = points[i].i
-                y = points[i].j
-                #print("{0}:{1}".format(x, y))
-                self.after((i+1)*100, self.drawWayPoint, x, y)
+            if pattern == "oval":
+                self.drawWayWrapper(self.drawWayPoint, showProcess, [(i+1)*100, points[i].i, points[i].j])
+            elif pattern == "line":
+                if i < len(points) - 1:
+                    self.drawWayWrapper(self.drawWayLine, showProcess, [(i+1)*100, points[i].i, points[i].j, points[i+1].i, points[i+1].j])
             else:
-                self.drawWayPoint(points[i].i, points[i].j)
+                print("incorrect pattern ")
+
+                
+    def coordinatesToIndexes(self, x, y):
+        cX = x // 15 
+        cY = y // 15
+        if cX == 0 or cY == 0:
+            print("incorrect area; using default point")
+            return pair(0,0)
+        return pair(cY-1, cX-1) #why???
+        
+    def callbackStart(self, event):
+        print("clicked at {0}:{1}".format(event.x, event.y))
+        self.mazeSettings.startPoint = self.coordinatesToIndexes(event.x, event.y)
+        self.mazeSettings.pointString.set("from {0}:{1} to {2}:{3}".format(self.mazeSettings.startPoint.i, self.mazeSettings.startPoint.j, self.mazeSettings.endPoint.i, self.mazeSettings.endPoint.j))
+
+    def callbackEnd(self, event):
+        print("clicked at {0}:{1}".format(event.x, event.y))
+        self.mazeSettings.endPoint = self.coordinatesToIndexes(event.x, event.y)
+        self.mazeSettings.pointString.set("from {0}:{1} to {2}:{3}".format(self.mazeSettings.startPoint.i, self.mazeSettings.startPoint.j, self.mazeSettings.endPoint.i, self.mazeSettings.endPoint.j))
+
+    def chooseStartPoint(self):
+        self.canvas.focus_set()
+        self.canvas.bind("<Button-1>", self.callbackStart)
+
+    def chooseEndPoint(self):
+        self.canvas.focus_set()
+        self.canvas.bind("<Button-1>", self.callbackEnd)        
     
     def draw_horizontal_line(self, i, j):
         self.canvas.create_line(15+j*15, 15+(i+1)*15, 30+j*15, 15+(i+1)*15, tag="{0}:{1}".format(i,j))
@@ -45,7 +212,7 @@ class Application(tk.Frame):
             self.draw_vertical_line(i, -1)
             for j in range(n):
                 if maze[i][j].walls == 3:
-                    pass
+                   pass
                 elif maze[i][j].walls == 2:
                     self.draw_vertical_line(i, j)
                 elif maze[i][j].walls == 1:
@@ -82,20 +249,7 @@ class Application(tk.Frame):
             self.draw_vertical_line(i, j)
             self.draw_horizontal_line(i, j)
                     
-    def create_widgets(self):
-        ###########################
-        self.canvas.pack(expand=1)
-        self.canvas.config(width=1000, height=1000)
-        ###########################
-        self.generate = tk.Button(self)
-        self.generate["text"] = "Generate Maze"
-        self.generate["command"] = self.generateMaze
-        self.generate.pack(side="top")
-
-        self.quit = tk.Button(self, text="QUIT", fg="red", command=self.master.destroy)
-        self.quit.pack(side="bottom")
-
-    def redrawMaze(self, m, n, matrix, showProcess=False):
+    def redrawMaze(self, m, n, matrix, showProcess=0):
         #PrintWallMaze(matrix, m, n)
         #print("0 ")
         #self.after_cancel(self.after_id)
@@ -137,29 +291,60 @@ class Application(tk.Frame):
         #self.drawMaze(m, n, matrix)
         return matrix
 
-    def findWay(self, maze, m, n):
-        graf = graph.matrixToGraph(maze, m, n)
-        way = graph.BFS(graf.head, pair(m-2,n-1))
-        self.drawWay(way, True)
-        
-    def generateMaze(self):
-        maze = mazeLib.GenerateSidewinderMaze(m, n)
-        #maze = mazeLib.GenerateEllerMaze(m,n)
-        #maze = CreateEmptyMaze(m, n)
-        #PrintMaze(maze, m ,n)
-        self.redrawMaze(m, n, maze, True)
-        #self.redrawMazeProcess(m, n, maze)
-        #self.findWay(maze, m, n)
-        #print("hi there, everyone!")
+    def findWay(self):
+        self.findWayInMaze(self.mazeSettings.maze, self.mazeSettings.width, self.mazeSettings.height)
+        self.drawWay(self.mazeSettings.way, self.mazeSettings.showWay.get(), self.mazeSettings.wayPointPattern.get())
 
+    def findWayInMaze(self, maze, m, n):
+        if self.mazeSettings.maze == None:
+            return
+        if self.mazeSettings.endPoint.isNull():
+            self.mazeSettings.endPoint = pair(self.mazeSettings.width - 1, self.mazeSettings.height - 1)
+        self.mazeSettings.wayGraph = graph.matrixToGraph(maze, m, n, self.mazeSettings.startPoint)
+        self.mazeSettings.way = graph.BFS(self.mazeSettings.wayGraph.head, self.mazeSettings.endPoint)#pair(m-2,n-1))        
+
+    def getMazeSize(self):
+        try:
+            wEntry = int(self.mazeSettings.widthStr.get()) # or ?? wEntry = int(self.wEntry.get())
+            if wEntry < 0 or wEntry > 100:
+                raise Exception("incorrect width value; using default value")
+        except:
+            wEntry = defaults.mazeWidth #default value here
+
+        try:
+            hEntry = int(self.mazeSettings.heightStr.get()) #or ?? hEntry = int(self.hEntry.get())
+            if hEntry < 0 or hEntry > 100:
+                raise Exception("incorrect height value; using default value")
+        except:
+            hEntry = defaults.mazeHeight #default value here
+            
+        self.mazeSettings.width = wEntry
+        self.mazeSettings.height = hEntry
+
+        print("{0}:{1}".format(self.mazeSettings.width, self.mazeSettings.height))
+
+    def getDataFromUI(self):
+        self.getMazeSize()
+        print("genProc = {0}; useAlg = {1}; wayProc = {2}".format(self.mazeSettings.showGenerationProcess.get(), self.mazeSettings.method.get(), self.mazeSettings.showWay.get()))
+        ##TODO: width and height vice versa?? Fix it
+        self.canvas.config(width = (self.mazeSettings.height+1)*15, height = (self.mazeSettings.width+1)*15)
+        self.mazeSettings.pointString.set("from {0}:{1} to {2}:{3}".format(0, 0, self.mazeSettings.width - 1, self.mazeSettings.height - 1))
+                
+    def generateMaze(self):        
+        self.getDataFromUI()
+        self.mazeSettings.reset()
+        if self.mazeSettings.method.get() == "SideWinder":
+            self.mazeSettings.maze = mazeLib.GenerateSidewinderMaze(self.mazeSettings.width, self.mazeSettings.height)
+        elif self.mazeSettings.method.get() == "Eller's Algorithm":
+            self.mazeSettings.maze = mazeLib.GenerateEllerMaze(self.mazeSettings.width, self.mazeSettings.height)
+        else:
+            print("Algorithm {0} is not supported!".format(self.mazeSettings.method.get()))
+            return
+        
+        self.redrawMaze(self.mazeSettings.width, self.mazeSettings.height, self.mazeSettings.maze, self.mazeSettings.showGenerationProcess.get())
     
 
 root = tk.Tk()
 app = Application(master=root)
 app.mainloop()
 
-
-#matrix = CreateEmptyMaze(m, n)
-#GenerateEllerMaze(m,n)
-#GenerateSidewinderMaze(m, n)
-#GenerateSidewinderMazeInt(m,n)

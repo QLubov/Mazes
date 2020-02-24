@@ -88,7 +88,7 @@ def RemoveFloor(maze, row, col):
         maze[row][col].walls = 3
         maze[row+1][col].id = maze[row][col].id
 
-def RemoveRandomFloor(maze, row, id):
+def RemoveRandomFloor(maze, row, n, id):
     idIndx = []
     for j in range(n):
         if maze[row][j].id == id:
@@ -115,7 +115,7 @@ def GenerateEllerMaze(m,n):
             elif fcount != 0 and JoinCells():
                 RemoveFloor(matrix, i, j)
             elif fcount == 0:
-                RemoveRandomFloor(matrix, i, matrix[i][j].id)
+                RemoveRandomFloor(matrix, i, n, matrix[i][j].id)
 
         for j in range(n):
             if matrix[i+1][j].id == 0:
